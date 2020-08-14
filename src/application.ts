@@ -1,6 +1,6 @@
+import 'dotenv/config';
 import express from 'express';
 import 'express-async-errors';
-
 import { MikroORM, IDatabaseDriver, Connection } from '@mikro-orm/core';
 import expressPlayground from 'graphql-playground-middleware-express';
 import { Server } from 'http';
@@ -9,7 +9,10 @@ import { GraphQLSchema } from 'graphql';
 import { buildSchema } from 'type-graphql';
 import bodyParser from 'body-parser';
 import { graphqlHTTP } from 'express-graphql';
+import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
 import { MyContext } from 'utils/interfaces/context.interface';
+
 import { UserResolver } from 'resolvers/user.resolver';
 
 export default class Application {
@@ -18,8 +21,8 @@ export default class Application {
   public server: Server;
 
   public connect = async (): Promise<void> => {
-    // initialize MikroORM
     try {
+      // initialize MikroORM
       this.orm = await MikroORM.init();
 
       // auto migrate schema
@@ -38,17 +41,42 @@ export default class Application {
   public init = async (): Promise<void> => {
     this.host = express();
 
+    // enable playground in dev
     if (process.env.NODE_ENV !== 'production') {
       this.host.get('/graphql', expressPlayground({ endpoint: '/graphql' }));
     }
 
-    this.host.use(cors());
-
     try {
+      // add session handling
+      this.host.use(
+        await session({
+          store: new (connectPgSimple(session))(),
+          name: 'qid',
+          secret: process.env.COOKIE_SECRET,
+          resave: false,
+          saveUninitialized: false,
+          cookie: {
+            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+          },
+        }),
+      );
+
+      // enable cors
+      this.host.use(
+        cors({
+          credentials: true,
+          origin: '*',
+        }),
+      );
+
+      // initialize schema
       const schema: GraphQLSchema = await buildSchema({
         resolvers: [UserResolver],
       });
 
+      // add graphql route and middleware
       this.host.post(
         '/graphql',
         bodyParser.json(),
@@ -61,12 +89,21 @@ export default class Application {
         })),
       );
 
+      // error middlware
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      this.host.use((error: Error, req: express.Request, res: express.Response, next: express.NextFunction): void => {
-        console.error('🚨  Something went wrong', error);
-        res.status(400).send(error);
-      });
+      this.host.use(
+        (
+          error: Error,
+          req: express.Request,
+          res: express.Response,
+          next: express.NextFunction,
+        ): void => {
+          console.error('🚨  Something went wrong', error);
+          res.status(400).send(error);
+        },
+      );
 
+      // start server on default port 4000
       const port = process.env.PORT || 4000;
       this.server = this.host.listen(port, () => {
         console.log(`🚀  http://localhost:${port}/graphql`);

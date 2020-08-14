@@ -1,5 +1,7 @@
 import 'dotenv/config';
 
+//TODO: FIX IMPORT ERROR IN PRODUCTION MODE
+
 export default {
   migrations: {
     path: './src/migrations',
@@ -7,7 +9,7 @@ export default {
     transactional: true,
   },
   tsNode: process.env.NODE_DEV === 'true' ? true : false,
-  clientUrl: process.env.POSTGRES_URL,
+  clientUrl: process.env.DATABASE_URL,
   entities: ['dist/**/*.entity.js'],
   entitiesTs: ['src/**/*.entity.ts'],
   type: 'postgresql',
