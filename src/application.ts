@@ -90,13 +90,12 @@ export default class Application {
       );
 
       // error middlware
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       this.host.use(
         (
           error: Error,
           req: express.Request,
           res: express.Response,
-          next: express.NextFunction,
+          next: express.NextFunction, // eslint-disable-line @typescript-eslint/no-unused-vars
         ): void => {
           console.error('🚨  Something went wrong', error);
           res.status(400).send(error);

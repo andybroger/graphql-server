@@ -1,7 +1,5 @@
 import 'dotenv/config';
 
-//TODO: FIX IMPORT ERROR IN PRODUCTION MODE
-
 export default {
   migrations: {
     path: './src/migrations',
