@@ -14,13 +14,13 @@ import fieldsToRelations from 'graphql-fields-to-relations';
 import { User } from 'entities/user.entity';
 import { MyContext } from 'utils/interfaces/context.interface';
 import { UserValidator } from 'contracts/validators/user.validator';
-import { sendEmail } from 'utils/sendMail';
-import { createConfirmUserUrl } from 'utils/createConfirmUserUrl';
+import { sendEmail } from 'utils/helpers/sendMail';
+import { createTokenUrl } from 'utils/helpers/createTokenUrl';
 import { Token } from 'utils/entities/token.entity';
 
 @Resolver(() => User)
 export class UserResolver {
-  @Authorized()
+  @Authorized('ADMIN')
   @Query(() => [User])
   public async getUsers(
     @Ctx() ctx: MyContext,
@@ -40,9 +40,12 @@ export class UserResolver {
     @Info() info: GraphQLResolveInfo,
   ): Promise<User | null> {
     const id = ctx.req.session.userId;
-    if (!id) return null;
+    if (!id) {
+      return null;
+    }
+
     const relationPaths = fieldsToRelations(info);
-    return ctx.em.getRepository(User).findOne({ id }, relationPaths);
+    return ctx.em.getRepository(User).findOneOrFail({ id }, relationPaths);
   }
 
   @Mutation(() => User)
@@ -54,13 +57,18 @@ export class UserResolver {
     const user = new User({ ...input, password: hashedPassword });
     await ctx.em.persist(user).flush();
 
-    const confirmUserUrl = await createConfirmUserUrl(user.id, ctx);
+    const confirmUserUrl = await createTokenUrl({
+      user,
+      type: 'confirm',
+      ctx,
+    });
 
     await sendEmail({
       email: input.email,
       subject: '🎬  Almost there, just confirm your email.',
       html: `To confirm <a href="${confirmUserUrl}">please click here</a>`,
     });
+
     return user;
   }
 
@@ -71,20 +79,60 @@ export class UserResolver {
   ): Promise<boolean> {
     const userToken = await ctx.em
       .getRepository(Token)
-      .findOne({ token: `confirm:${token}` });
-    if (!userToken) {
-      throw new Error('invalid token');
-    }
+      .findOneOrFail({ token: `confirm:${token}` });
+
     const user = await ctx.em
       .getRepository(User)
-      .findOne({ id: userToken.userId });
-    if (!user) {
-      throw new Error('invalid token');
-    }
+      .findOneOrFail({ id: userToken.userId });
+
     user.confirmed = true;
+
     await ctx.em.getRepository(Token).remove(userToken);
     await ctx.em.flush();
     return user.confirmed;
+  }
+
+  @Mutation(() => Boolean)
+  public async forgotPassword(
+    @Arg('email') email: string,
+    @Ctx() ctx: MyContext,
+  ): Promise<boolean> {
+    const user = await ctx.em.getRepository(User).findOneOrFail({ email });
+
+    const changePasswordUrl = await createTokenUrl({
+      user,
+      type: 'change-password',
+      ctx,
+    });
+
+    await sendEmail({
+      email,
+      subject: '🔑  Dont worry, set your new password now.',
+      html: `To reset your password, <a href="${changePasswordUrl}">click here</a>`,
+    });
+
+    return true;
+  }
+
+  @Mutation(() => User)
+  public async changePassword(
+    @Arg('password') password: string,
+    @Arg('token') token: string,
+    @Ctx() ctx: MyContext,
+  ): Promise<User | null> {
+    const userToken = await ctx.em
+      .getRepository(Token)
+      .findOneOrFail({ token: `change-password:${token}` });
+
+    const user = await ctx.em
+      .getRepository(User)
+      .findOneOrFail({ id: userToken.userId });
+
+    user.password = await argon2.hash(password);
+    await ctx.em.getRepository(Token).remove(userToken);
+    await ctx.em.flush();
+
+    return user;
   }
 
   @Mutation(() => User, { nullable: true })
@@ -98,12 +146,18 @@ export class UserResolver {
     const user = await ctx.em
       .getRepository(User)
       .findOne({ email }, relationPaths);
-    if (!user) return null;
+    if (!user) {
+      return null;
+    }
 
     const valid = await argon2.verify(user.password, password);
-    if (!valid) return null;
+    if (!valid) {
+      return null;
+    }
 
-    if (!user.confirmed) throw new Error('Please confirm your email');
+    if (!user.confirmed) {
+      throw new Error('Please confirm your email');
+    }
 
     // return a session coockie
     ctx.req.session.userId = user.id;

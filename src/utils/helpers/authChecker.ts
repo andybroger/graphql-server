@@ -10,16 +10,16 @@ export const customAuthChecker: AuthChecker<MyContext> = async (
 ): Promise<boolean> => {
   const user = await context.em
     .getRepository(User)
-    .findOne({ id: context.req.session.userId }, fieldsToRelations(info));
+    .findOneOrFail({ id: context.req.session.userId }, fieldsToRelations(info));
+
   if (roles.length === 0) {
     return !!user;
   }
-  if (!user) {
-    return false;
-  }
+
   const userRoles = user.roles.getItems().map((role) => role.name);
   if (userRoles.some((role) => roles.includes(role))) {
     return true;
   }
+
   return false;
 };
