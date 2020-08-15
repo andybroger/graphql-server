@@ -14,7 +14,7 @@ import connectPgSimple from 'connect-pg-simple';
 import { MyContext } from 'utils/interfaces/context.interface';
 
 import { UserResolver } from 'resolvers/user.resolver';
-import { customAuthChecker } from 'utils/authChecker';
+import { customAuthChecker } from 'utils/helpers/authChecker';
 import { RoleResolver } from 'resolvers/role.resolver';
 
 export class Application {
@@ -80,7 +80,6 @@ export class Application {
       });
 
       // add graphql route and middleware
-      // TODO: implement meaningfull errors
       this.host.post(
         '/graphql',
         bodyParser.json(),

@@ -1,6 +1,6 @@
 import { v4 } from 'uuid';
-import { MyContext } from './interfaces/context.interface';
-import { Token } from './entities/token.entity';
+import { MyContext } from '../interfaces/context.interface';
+import { Token } from '../entities/token.entity';
 
 export const createConfirmUserUrl = async (
   userId: string,
