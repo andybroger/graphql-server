@@ -15,8 +15,10 @@ import { MyContext } from 'utils/interfaces/context.interface';
 
 import { UserResolver } from 'resolvers/user.resolver';
 import { customAuthChecker } from 'utils/authChecker';
+import { RoleResolver } from 'resolvers/role.resolver';
+import { sendEmail } from 'utils/sendMail';
 
-export default class Application {
+export class Application {
   public orm: MikroORM<IDatabaseDriver<Connection>>;
   public host: express.Application;
   public server: Server;
@@ -74,7 +76,7 @@ export default class Application {
 
       // initialize schema
       const schema: GraphQLSchema = await buildSchema({
-        resolvers: [UserResolver],
+        resolvers: [UserResolver, RoleResolver],
         authChecker: customAuthChecker,
       });
 

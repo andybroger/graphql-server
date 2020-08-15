@@ -1,7 +1,14 @@
 import { ObjectType, Field, Root } from 'type-graphql';
-import { Entity, Property, Unique } from '@mikro-orm/core';
+import {
+  Entity,
+  Property,
+  Unique,
+  Collection,
+  ManyToMany,
+} from '@mikro-orm/core';
 import { Base } from 'utils/entities/base.entity';
-import UserValidator from 'contracts/validators/user.validator';
+import { UserValidator } from 'contracts/validators/user.validator';
+import { Role } from './role.entity';
 
 @ObjectType()
 @Entity()
@@ -28,6 +35,10 @@ export class User extends Base<User> {
   @Field({ nullable: true })
   @Property({ nullable: true })
   notes?: string;
+
+  @Field(() => [Role])
+  @ManyToMany(() => Role)
+  roles: Collection<Role> = new Collection<Role>(this);
 
   @Field()
   name(@Root() parent: User): string {

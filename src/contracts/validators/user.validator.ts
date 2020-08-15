@@ -8,7 +8,7 @@ import {
 } from 'class-validator';
 
 @InputType()
-class UserValidator {
+export class UserValidator {
   @Field()
   @IsString()
   firstName: string;
@@ -31,5 +31,3 @@ class UserValidator {
   @IsOptional()
   notes?: string;
 }
-
-export default UserValidator;

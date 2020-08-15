@@ -7,12 +7,13 @@ import {
   Mutation,
   Authorized,
 } from 'type-graphql';
-import { User } from 'entities/user.entity';
-import { MyContext } from 'utils/interfaces/context.interface';
+import argon2 from 'argon2';
 import { GraphQLResolveInfo } from 'graphql';
 import fieldsToRelations from 'graphql-fields-to-relations';
-import UserValidator from 'contracts/validators/user.validator';
-import argon2 from 'argon2';
+
+import { User } from 'entities/user.entity';
+import { MyContext } from 'utils/interfaces/context.interface';
+import { UserValidator } from 'contracts/validators/user.validator';
 
 @Resolver(() => User)
 export class UserResolver {
@@ -26,18 +27,23 @@ export class UserResolver {
     return ctx.em.getRepository(User).findAll(relationPaths);
   }
 
-  @Query(() => User, { nullable: true })
-  public async getUser(
-    @Arg('id') id: string,
+  @Authorized()
+  @Query(() => User, {
+    nullable: true,
+    description: 'Me returns User info when logged in.',
+  })
+  public async me(
     @Ctx() ctx: MyContext,
     @Info() info: GraphQLResolveInfo,
   ): Promise<User | null> {
+    const id = ctx.req.session.userId;
+    if (!id) return null;
     const relationPaths = fieldsToRelations(info);
     return ctx.em.getRepository(User).findOne({ id }, relationPaths);
   }
 
   @Mutation(() => User)
-  public async addUser(
+  public async register(
     @Arg('input') input: UserValidator,
     @Ctx() ctx: MyContext,
   ): Promise<User> {
@@ -63,19 +69,10 @@ export class UserResolver {
     const valid = await argon2.verify(user.password, password);
     if (!valid) return null;
 
+    if (!user.confirmed) throw new Error('Please confirm your email');
+
     // return a session coockie
     ctx.req.session.userId = user.id;
     return user;
-  }
-
-  @Query(() => User, { nullable: true })
-  public async me(
-    @Ctx() ctx: MyContext,
-    @Info() info: GraphQLResolveInfo,
-  ): Promise<User | null> {
-    const id = ctx.req.session.userId;
-    if (!id) return null;
-    const relationPaths = fieldsToRelations(info);
-    return ctx.em.getRepository(User).findOne({ id }, relationPaths);
   }
 }
