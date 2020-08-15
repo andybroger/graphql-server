@@ -45,7 +45,11 @@ export class UserResolver {
     }
 
     const relationPaths = fieldsToRelations(info);
-    return ctx.em.getRepository(User).findOneOrFail({ id }, relationPaths);
+    const user = ctx.em.getRepository(User).findOne({ id }, relationPaths);
+    if (!user) {
+      return null;
+    }
+    return user;
   }
 
   @Mutation(() => User)
@@ -79,7 +83,11 @@ export class UserResolver {
   ): Promise<boolean> {
     const userToken = await ctx.em
       .getRepository(Token)
-      .findOneOrFail({ token: `confirm:${token}` });
+      .findOne({ token: `confirm:${token}` });
+
+    if (!userToken) {
+      return null;
+    }
 
     const user = await ctx.em
       .getRepository(User)
@@ -97,7 +105,11 @@ export class UserResolver {
     @Arg('email') email: string,
     @Ctx() ctx: MyContext,
   ): Promise<boolean> {
-    const user = await ctx.em.getRepository(User).findOneOrFail({ email });
+    const user = await ctx.em.getRepository(User).findOne({ email });
+
+    if (!user) {
+      return false;
+    }
 
     const changePasswordUrl = await createTokenUrl({
       user,
@@ -122,7 +134,11 @@ export class UserResolver {
   ): Promise<User | null> {
     const userToken = await ctx.em
       .getRepository(Token)
-      .findOneOrFail({ token: `change-password:${token}` });
+      .findOne({ token: `change-password:${token}` });
+
+    if (!userToken) {
+      return null;
+    }
 
     const user = await ctx.em
       .getRepository(User)
@@ -133,6 +149,21 @@ export class UserResolver {
     await ctx.em.flush();
 
     return user;
+  }
+
+  @Mutation(() => Boolean)
+  async logout(@Ctx() ctx: MyContext): Promise<boolean> {
+    return new Promise((res, rej) =>
+      ctx.req.session.destroy((err) => {
+        if (err) {
+          console.log(err);
+          return rej(false);
+        }
+
+        ctx.res.clearCookie('qid');
+        return res(true);
+      }),
+    );
   }
 
   @Mutation(() => User, { nullable: true })
