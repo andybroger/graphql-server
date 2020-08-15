@@ -6,15 +6,15 @@ import { v4 } from 'uuid';
 export class Base<T extends { id: string }> extends BaseEntity<T, 'id'> {
   @Field(() => ID)
   @PrimaryKey({ type: 'uuid' })
-  public id: string = v4();
+  id: string = v4();
 
   @Field()
   @Property()
-  public createdAt: Date = new Date();
+  createdAt: Date = new Date();
 
   @Field()
   @Property({ onUpdate: () => new Date() })
-  public updatedAt: Date = new Date();
+  updatedAt: Date = new Date();
 
   constructor(body = {}) {
     super();

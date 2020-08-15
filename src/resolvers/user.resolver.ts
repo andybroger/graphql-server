@@ -1,4 +1,12 @@
-import { Resolver, Query, Ctx, Info, Arg, Mutation } from 'type-graphql';
+import {
+  Resolver,
+  Query,
+  Ctx,
+  Info,
+  Arg,
+  Mutation,
+  Authorized,
+} from 'type-graphql';
 import { User } from 'entities/user.entity';
 import { MyContext } from 'utils/interfaces/context.interface';
 import { GraphQLResolveInfo } from 'graphql';
@@ -8,6 +16,7 @@ import argon2 from 'argon2';
 
 @Resolver(() => User)
 export class UserResolver {
+  @Authorized()
   @Query(() => [User])
   public async getUsers(
     @Ctx() ctx: MyContext,

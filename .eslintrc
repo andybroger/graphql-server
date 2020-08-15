@@ -6,7 +6,6 @@
     "sourceType": "module",
     "project": "tsconfig.json"
   },
-  "ignorePatterns": "src/migrations/",
   "plugins": ["@typescript-eslint", "prettier"],
   "extends": [
     "plugin:@typescript-eslint/recommended", // Uses the recommended rules from the @typescript-eslint/eslint-plugin

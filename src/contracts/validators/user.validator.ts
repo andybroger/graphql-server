@@ -1,29 +1,35 @@
 import { InputType, Field } from 'type-graphql';
-import { IsString, IsEmail, IsDate, IsOptional, MinLength } from 'class-validator';
+import {
+  IsString,
+  IsEmail,
+  IsDate,
+  IsOptional,
+  MinLength,
+} from 'class-validator';
 
 @InputType()
 class UserValidator {
   @Field()
   @IsString()
-  public firstName: string;
+  firstName: string;
 
   @Field()
   @IsString()
-  public lastName: string;
+  lastName: string;
 
   @Field()
   @IsEmail()
-  public email: string;
+  email: string;
 
   @Field()
   @IsString()
   @MinLength(5)
-  public password: string;
+  password: string;
 
   @Field({ nullable: true })
   @IsDate()
   @IsOptional()
-  public born?: Date;
+  notes?: string;
 }
 
 export default UserValidator;

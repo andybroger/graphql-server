@@ -14,6 +14,7 @@ import connectPgSimple from 'connect-pg-simple';
 import { MyContext } from 'utils/interfaces/context.interface';
 
 import { UserResolver } from 'resolvers/user.resolver';
+import { customAuthChecker } from 'utils/authChecker';
 
 export default class Application {
   public orm: MikroORM<IDatabaseDriver<Connection>>;
@@ -25,7 +26,7 @@ export default class Application {
       // initialize MikroORM
       this.orm = await MikroORM.init();
 
-      // auto migrate schema
+      // auto migrate database schema
       const migrator = this.orm.getMigrator();
       const migrations = await migrator.getPendingMigrations();
       if (migrations && migrations.length > 0) {
@@ -74,9 +75,11 @@ export default class Application {
       // initialize schema
       const schema: GraphQLSchema = await buildSchema({
         resolvers: [UserResolver],
+        authChecker: customAuthChecker,
       });
 
       // add graphql route and middleware
+      // TODO: implement meaningfull errors
       this.host.post(
         '/graphql',
         bodyParser.json(),

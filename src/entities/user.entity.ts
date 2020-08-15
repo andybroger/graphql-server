@@ -8,29 +8,29 @@ import UserValidator from 'contracts/validators/user.validator';
 export class User extends Base<User> {
   @Field()
   @Property()
-  public firstName: string;
+  firstName!: string;
 
   @Field()
   @Property()
-  public lastName: string;
+  lastName!: string;
 
   @Field()
   @Property()
   @Unique()
-  public email: string;
+  email!: string;
 
   @Property()
-  public password: string;
+  password!: string;
 
   @Property()
-  public confirmed = false;
+  confirmed = false;
 
   @Field({ nullable: true })
   @Property({ nullable: true })
-  public born?: Date;
+  notes?: string;
 
   @Field()
-  public name(@Root() parent: User): string {
+  name(@Root() parent: User): string {
     return `${parent.firstName} ${parent.lastName}`;
   }
 

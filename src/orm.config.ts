@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { MikroORM, MikroORMOptions } from '@mikro-orm/core';
 
 export default {
   migrations: {
@@ -11,4 +12,4 @@ export default {
   entities: ['dist/**/*.entity.js'],
   entitiesTs: ['src/**/*.entity.ts'],
   type: 'postgresql',
-};
+} as MikroORMOptions;
