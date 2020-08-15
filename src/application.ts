@@ -16,7 +16,6 @@ import { MyContext } from 'utils/interfaces/context.interface';
 import { UserResolver } from 'resolvers/user.resolver';
 import { customAuthChecker } from 'utils/authChecker';
 import { RoleResolver } from 'resolvers/role.resolver';
-import { sendEmail } from 'utils/sendMail';
 
 export class Application {
   public orm: MikroORM<IDatabaseDriver<Connection>>;

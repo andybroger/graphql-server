@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { MikroORM, MikroORMOptions } from '@mikro-orm/core';
+import { MikroORMOptions } from '@mikro-orm/core';
 
 export default {
   migrations: {

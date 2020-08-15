@@ -14,6 +14,9 @@ import fieldsToRelations from 'graphql-fields-to-relations';
 import { User } from 'entities/user.entity';
 import { MyContext } from 'utils/interfaces/context.interface';
 import { UserValidator } from 'contracts/validators/user.validator';
+import { sendEmail } from 'utils/sendMail';
+import { createConfirmUserUrl } from 'utils/createConfirmUserUrl';
+import { Token } from 'utils/entities/token.entity';
 
 @Resolver(() => User)
 export class UserResolver {
@@ -50,7 +53,38 @@ export class UserResolver {
     const hashedPassword = await argon2.hash(input.password);
     const user = new User({ ...input, password: hashedPassword });
     await ctx.em.persist(user).flush();
+
+    const confirmUserUrl = await createConfirmUserUrl(user.id, ctx);
+
+    await sendEmail({
+      email: input.email,
+      subject: '🎬  Almost there, just confirm your email.',
+      html: `To confirm <a href="${confirmUserUrl}">please click here</a>`,
+    });
     return user;
+  }
+
+  @Mutation(() => Boolean)
+  public async confirmUser(
+    @Arg('token') token: string,
+    @Ctx() ctx: MyContext,
+  ): Promise<boolean> {
+    const userToken = await ctx.em
+      .getRepository(Token)
+      .findOne({ token: `confirm:${token}` });
+    if (!userToken) {
+      throw new Error('invalid token');
+    }
+    const user = await ctx.em
+      .getRepository(User)
+      .findOne({ id: userToken.userId });
+    if (!user) {
+      throw new Error('invalid token');
+    }
+    user.confirmed = true;
+    await ctx.em.getRepository(Token).remove(userToken);
+    await ctx.em.flush();
+    return user.confirmed;
   }
 
   @Mutation(() => User, { nullable: true })

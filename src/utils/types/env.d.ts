@@ -4,5 +4,6 @@ declare namespace NodeJS {
     COOKIE_SECRET: string;
     DATABASE_URL: string;
     NODE_DEV: string;
+    CONFIRM_URL: string;
   }
 }
