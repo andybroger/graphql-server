@@ -1,12 +1,12 @@
 # GraphQL Server
 
-A minimal boilerplate graphql server with user management/ role system built in.
+A minimal boilerplate graphql server with user/role system built in.
 
 Technologies used:
 
 - express
 - express-graphql
-- microORM v4
+- mikroORM v4
 - typegraphql
 - postgres
 - express-session with psql as session store
@@ -21,8 +21,10 @@ Technologies used:
 
 ## TODO
 
-- [] implement token expire function
-- [] a lot more i didnt think about it yet.
+- [ ] implement token expire function
+- [ ] implement social media login
+- [ ] implement nextjs frontend example
+- [ ] a lot more i didnt think about it yet.
 
 ## Improve
 
