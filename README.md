@@ -24,6 +24,7 @@ Technologies used:
 - [ ] implement token expire function
 - [ ] implement social media login
 - [ ] implement nextjs frontend example
+- [ ] implement tests
 - [ ] a lot more i didnt think about it yet.
 
 ## Improve
